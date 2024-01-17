@@ -1,0 +1,41 @@
+name: Deploy
+on:
+  push:
+    branches:
+      - main
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Just
+        run: |
+          wget https://github.com/casey/just/releases/download/1.23.0/just-1.23.0-x86_64-unknown-linux-musl.tar.gz -O $HOME/just.tar.gz
+          mkdir $HOME/.local/just
+          tar -C $HOME/.local/just -xzf $HOME/just.tar.gz
+          echo $HOME/.local/just >> $GITHUB_PATH
+
+      - name: Install Node
+        run: |
+          NODE_VERSION=$(curl -sL https://nodejs.org/download/release/index.tab | awk '($10 != "-" && NR != 1) { print $1; exit}')
+          wget https://nodejs.org/download/release/${NODE_VERSION}/node-${NODE_VERSION}-linux-x64.tar.gz -O $HOME/node.tar.gz
+          tar -C $HOME/.local -xzf $HOME/node.tar.gz
+          mv $HOME/.local/node-${NODE_VERSION}-linux-x64 $HOME/.local/nodejs
+          echo $HOME/.local/nodejs >> $GITHUB_PATH
+
+      - name: Configure NPM
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" >> $HOME/.npmrc
+          npm install -g pnpm npm
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Build
+        run: |
+          just build
+          
+      - name: Publish
+        run: |
+          pnpm publish --access=public
+        

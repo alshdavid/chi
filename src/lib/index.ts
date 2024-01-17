@@ -1,3 +1,6 @@
 export * from './channel.js'
 export * from './request.js'
-export * from './server-side-events.js'
+export * from './server-sent-events.js'
+export * from './handlers.js'
+export * from './headers.js'
+export * from './static.js'

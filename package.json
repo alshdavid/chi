@@ -1,8 +1,10 @@
 {
   "name": "@alshdavid/chi",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "license": "MIT",
-  "type": "module",
+  "type": "commonjs",
+  "main": "./dist/require/index.js",
+  "types": "./dist/types/index.d.ts",
   "exports": {
     ".": {
       "import": "./dist/module/index.js",
@@ -22,5 +24,14 @@
   "devDependencies": {
     "@types/node": "^20.11.4",
     "typescript": "^5.3.3"
-  }
+  },
+  "files": [
+    "dist",
+    "src",
+    "justfile",
+    "license",
+    "package.json",
+    "README.md",
+    "tsconfig.json"
+  ]
 }

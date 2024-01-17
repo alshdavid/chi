@@ -1,7 +1,11 @@
-export type ChannelFunc<T> = (value: T) => any
+export type ChannelFunc<T extends Array<any>> = (...value: T) => any
 export type DisposeFunc = () => any
 
-export class Channel<T = unknown> {
+export interface Subscribable<T extends Array<any>> {
+  subscribe(callback: ChannelFunc<T>): DisposeFunc
+}
+
+export class Channel<T extends Array<any>> {
     #callbacks = new Set<ChannelFunc<T>>()
 
     subscribe(callback: ChannelFunc<T>): DisposeFunc {
@@ -9,33 +13,48 @@ export class Channel<T = unknown> {
         return () => this.#callbacks.delete(callback)
     }
 
-    next(value: T): void {
-        for(const cb of this.#callbacks.values()) setTimeout(() => cb(value), 0)
+    next(...value: T): void {
+        for(const cb of this.#callbacks.values()) setTimeout(() => cb(...value), 0)
     }
 }
 
-export class NamedChannel<T = unknown> {
-  #channels = new Map<string, Channel<T>>()
+export class NamedChannel<T extends Array<any>> {
+  #channels_all = new Channel<[string, ...T]>()
+  #channels = new Map<string, Channel<[string, ...T]>>()
 
-  subscribe(name: string, cb: ChannelFunc<T>): DisposeFunc {
+  on_all_events(cb: ChannelFunc<[string, ...T]>): DisposeFunc {
+    return this.#channels_all.subscribe(cb)
+  }
+
+  on_event(name: string): Subscribable<[...T]> {
     const channel = this.#channels.get(name) || new Channel()
     this.#channels.set(name, channel)
-    return channel.subscribe(cb)
+    return {
+      subscribe: (cb: ChannelFunc<[ ...T]>) => channel.subscribe((_, ...value) => cb(...value))
+    }
   }
 
-  next(name: '*' | string, value: T): void {
+  next(name: string, ...value: T): void {
     const channel = this.#channels.get(name)
-    const wc_channel = this.#channels.get("*")
-    if (!channel || !wc_channel) {
-      return
+    if (channel) {
+      channel.next(name, ...value)
     }
-    channel.next(value)
-    wc_channel.next(value)
+    this.#channels_all.next(name, ...value)
   }
 
-  next_all(value: T): void {
-    for (const channel of this.#channels.values()) {
-      channel.next(value)
+  next_all(...value: T): void {
+    for (const [name, channel] of this.#channels.entries()) {
+      channel.next(name, ...value)
     }
+    this.#channels_all.next('*', ...value)
   }
+}
+
+export function first_value_from<T extends Array<any>>(target: Subscribable<T>): Promise<T> {
+  return new Promise<T>(resolve => {
+    const dispose = target.subscribe((...values) => {
+      dispose()
+      resolve(values)
+    })
+  })
 }

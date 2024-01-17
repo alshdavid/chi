@@ -51,6 +51,7 @@ junit.xml
 # Pact files and logs
 pacts/
 pact/
+src/package.json
 
 # General
 .DS_Store
