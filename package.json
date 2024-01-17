@@ -1,0 +1,26 @@
+{
+  "name": "@alshdavid/chi",
+  "version": "0.1.0",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/module/index.js",
+      "require": "./dist/require/index.js",
+      "source": "./src/index.ts",
+      "types": "./dist/types/index.d.ts",
+      "default": "./dist/require/index.js"
+    },
+    "./*": {
+      "import": "./dist/module/*",
+      "require": "./dist/require/*",
+      "source": "./src/*",
+      "types": "./dist/types/*",
+      "default": "./dist/require/*"
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.4",
+    "typescript": "^5.3.3"
+  }
+}
